@@ -8,17 +8,12 @@ jobs:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
-      - name: set target format file
-        run: |
-          echo $(git diff origin/${GITHUB_BASE_REF}..origin/${GITHUB_HEAD_REF} --name-only --diff-filter=A -- '*.py')
-          echo "TARGET_FORMAT_FILES=`git diff origin/${GITHUB_BASE_REF}..origin/${GITHUB_HEAD_REF} --name-only --diff-filter=A -- '*.py'`" >> $GITHUB_ENV
+      - name: install black
+          run: pip install black
       - name: check illegal format
         id: check_format
         continue-on-error: true
-        uses: psf/black@stable
-        with:
-          src: env.TARGET_FOMRAT_FILES
-          options: "--check --verbose"
+        run: git diff origin/${GITHUB_BASE_REF}..origin/${GITHUB_HEAD_REF} --name-only --diff-filter=A -- '*.py' | xargs black --check --verbose
       - name: exit if no problem format
         run: exit 0
         if: steps.check_format.outcome == 'success'
@@ -28,10 +23,7 @@ jobs:
         run: echo "CURRENT_DATETIME=$(date +'%Y%m%d%H%M%S')" >> $GITHUB_ENV
         if: steps.check_format.outcome == 'failure'
       - name: apply black
-        uses: psf/black@stable
-        with:
-          src: ${{ env.TARGET_FOMRAT_FILES }}
-          options: "-q"
+        run: git diff origin/${GITHUB_BASE_REF}..origin/${GITHUB_HEAD_REF} --name-only --diff-filter=A -- '*.py' | xargs black -q
         if: steps.check_format.outcome == 'failure'
       - name: commit fix format
         uses: EndBug/add-and-commit@v9
