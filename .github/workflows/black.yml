@@ -11,7 +11,7 @@ jobs:
       - name: set target format file
         run: |
           echo $(git diff origin/${GITHUB_BASE_REF}..origin/${GITHUB_HEAD_REF} --name-only --diff-filter=A -- '*.py')
-          echo "SET_FORMAT_FILES=$(git diff origin/${GITHUB_BASE_REF}..origin/${GITHUB_HEAD_REF} --name-only --diff-filter=A -- '*.py')" >> $GITHUB_ENV
+          echo "SET_FORMAT_FILES=`git diff origin/${GITHUB_BASE_REF}..origin/${GITHUB_HEAD_REF} --name-only --diff-filter=A -- '*.py')`" >> $GITHUB_ENV
       - name: check illegal format
         id: check_format
         continue-on-error: true
