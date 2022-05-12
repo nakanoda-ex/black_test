@@ -17,7 +17,7 @@ jobs:
         continue-on-error: true
         uses: psf/black@stable
         with:
-          src: $TARGET_FOMRAT_FILES
+          src: env.TARGET_FOMRAT_FILES
           options: "--check --verbose"
       - name: exit if no problem format
         run: exit 0
