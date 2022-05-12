@@ -8,14 +8,15 @@ jobs:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
-      - name: destination format file
+      - name: set target format file
         run: echo $(git diff origin/${GITHUB_BASE_REF}..origin/${GITHUB_HEAD_REF} --name-only --diff-filter=A -- '*.py')
+        run: echo "SET_FORMAT_FILES=$(git diff origin/${GITHUB_BASE_REF}..origin/${GITHUB_HEAD_REF} --name-only --diff-filter=A -- '*.py')" >> $GITHUB_ENV
       - name: check illegal format
         id: check_format
         continue-on-error: true
         uses: psf/black@stable
         with:
-          src: "./src"
+          src: env.SET_FORMAT_FILES
           options: "--check --verbose"
       - name: exit if no problem format
         run: exit 0
@@ -28,7 +29,7 @@ jobs:
       - name: apply black
         uses: psf/black@stable
         with:
-          src: "./src"
+          src: env.SET_FORMAT_FILES
           options: "-q"
         if: steps.check_format.outcome == 'failure'
       - name: commit fix format
