@@ -16,9 +16,8 @@ jobs:
         id: check_format
         continue-on-error: true
         uses: psf/black@stable
-        env:
-          INPUT_SRC: ${{ env.TARGET_FOMRAT_FILES }}
         with:
+          src: $TARGET_FOMRAT_FILES
           options: "--check --verbose"
       - name: exit if no problem format
         run: exit 0
