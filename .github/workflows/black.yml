@@ -37,7 +37,7 @@ jobs:
           new_branch: fix_${{github.head_ref}}_${{ env.CURRENT_DATETIME }}
           message: fix format
           push: true
-          add: src
+          add: .
         if: steps.check_format.outcome == 'failure'
       - name: create pull request
         uses: repo-sync/pull-request@v2
