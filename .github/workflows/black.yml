@@ -13,7 +13,7 @@ jobs:
         with:
           python-version: 3.7
       - name: install black
-          run: pip install black
+        run: pip install black
       - name: check illegal format
         id: check_format
         continue-on-error: true
