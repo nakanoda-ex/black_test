@@ -1,0 +1,45 @@
+name: Lint
+on: [pull_request]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: check illegal format
+        id: check_format
+        continue-on-error: true
+        uses: psf/black@stable
+        with:
+          src: "./src"
+          options: "--check --verbose"
+      - name: exit if no problem format
+        run: exit 0
+        if: steps.check_format.outcome == 'success'
+      - name: set branch suffix
+        env:
+          TZ: 'Asia/Tokyo'
+        run: echo "CURRENT_DATETIME=$(date +'%Y%m%d%H%M%S')" >> $GITHUB_ENV
+        if: steps.check_format.outcome == 'failure'
+      - name: apply black
+        uses: psf/black@stable
+        with:
+          src: "./src"
+          options: "-q"
+        if: steps.check_format.outcome == 'failure'
+      - name: commit fix format
+        uses: EndBug/add-and-commit@v9
+        with:
+          new_branch: fix_${{github.head_ref}}_${{ env.CURRENT_DATETIME }}
+          message: fix format
+          push: true
+          add: src
+        if: steps.check_format.outcome == 'failure'
+      - name: create pull request
+        uses: repo-sync/pull-request@v2
+        with:
+          source_branch: fix_${{github.head_ref}}_${{ env.CURRENT_DATETIME }}
+          destination_branch: ${{github.head_ref}}
+          pr_title: fix format ${{ env.PR_TITLE }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+        if: steps.check_format.outcome == 'failure'

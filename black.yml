@@ -1,0 +1,71 @@
+#アクション名
+name: Lint
+#プルリクエスト作成時に実行される（プルリクエストないのpushに対しても有効）
+on: [pull_request]
+
+jobs:
+  lint:
+  #github actionsの動作OS指定
+    runs-on: ubuntu-latest
+    steps:
+    #現在のリポジトリにチェックアウト
+    #usesは使用するアクション名を指定している
+      - uses: actions/checkout@v2
+      #check illegal formatというstepを作成
+      #idは他のstepから参照される際の値
+      #continue-on-error；エラーが発生しても処理を実行するかどうか、ここでは実行するのでtrueを入れる
+      #usesでpython formatterのblackを指定
+      #withはusesに対するパラメータ
+      #srcはフォーマット対象のディレクトリ
+      #optionsはblackコマンドのオプション
+      #--checkを用いることでフォーマットはせずにフォーマットの有無の確認を行う
+      - name: check illegal format
+        id: check_format
+        continue-on-error: true
+        uses: psf/black@stable
+        with:
+          src: "./src"
+          options: "--check --verbose"
+        #ifはこのステップを実行するかどうかのif文
+        #runはunixコマンド実行
+        #フォーマットの必要がない場合は正常終了する
+      - name: exit if no problem format
+        run: exit 0
+        if: steps.check_format.outcome == 'success'
+        #envは環境変数の値を変更する。
+        #TZはunixのタイムゾーンの環境変数
+        #echo "{name}={value}" >> $GITHUB_ENVでgithub action内の環境変数を設定している
+        #ブランチ作成時につけるサフィックスの時間を生成している
+        #以降のステップはフォーマットが必要な場合に実行される
+      - name: set branch suffix
+        env:
+          TZ: 'Asia/Tokyo'
+        run: echo "CURRENT_DATETIME=$(date +'%Y%m%d%H%M%S')" >> $GITHUB_ENV
+        if: steps.check_format.outcome == 'failure'
+      #ここのステップではフォーマットを行っている。
+      #-qはエラーのみを表示するオプション
+      - name: apply black
+        uses: psf/black@stable
+        with:
+          src: "./src"
+          options: "-q"
+        if: steps.check_format.outcome == 'failure'
+      #commitとpushを行うステップ
+      #ブランチ名。コミットコメント commit対象のリソースを指定してpushフラグをtrueにする
+      - name: commit fix format
+        uses: EndBug/add-and-commit@v9
+        with:
+          new_branch: fix_${{github.head_ref}}_${{ env.CURRENT_DATETIME }}
+          message: fix format
+          push: true
+          add: src
+        if: steps.check_format.outcome == 'failure'
+        #プルリクエストの作成
+      - name: create pull request
+        uses: repo-sync/pull-request@v2
+        with:
+          source_branch: fix_${{github.head_ref}}_${{ env.CURRENT_DATETIME }}
+          destination_branch: ${{github.head_ref}}
+          pr_title: fix format ${{ env.PR_TITLE }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+        if: steps.check_format.outcome == 'failure'
