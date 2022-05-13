@@ -18,7 +18,7 @@ jobs:
         id: check_format
         continue-on-error: true
         run: |
-          echo "BLACK_CONFIG='./config/pyproject.toml'" >> $GITHUB_ENV
+          echo "BLACK_CONFIG=./config/pyproject.toml" >> $GITHUB_ENV
           git diff origin/${GITHUB_BASE_REF}..origin/${GITHUB_HEAD_REF} --name-only --diff-filter=A -- '*.py' | xargs black --check --verbose --config $BLACK_CONFIG
           echo $?
       - name: exit if no problem format
