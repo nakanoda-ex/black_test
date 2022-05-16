@@ -15,15 +15,15 @@ jobs:
       - name: install black
         run: pip install black
       - name: set black config dir
-        run: echo "BLACK_CONFIG_PATH=./config/pyproject.toml" >> $GITHUB_ENV
+        run: echo "BLACK_CONFIG_PATH=" >> $GITHUB_ENV
       - name: check illegal format
         id: check_format
         continue-on-error: true
         run: |
           if [ "$BLACK_CONFIG_PATH" == "" ]; then
-            git diff origin/${GITHUB_BASE_REF}..origin/${GITHUB_HEAD_REF} --name-only --diff-filter=A -- '*.py' | xargs black --check --verbose
+            git diff origin/${GITHUB_BASE_REF}..origin/${GITHUB_HEAD_REF} -w --name-only --diff-filter=A -- '*.py' | xargs black --check --verbose
           else
-            git diff origin/${GITHUB_BASE_REF}..origin/${GITHUB_HEAD_REF} --name-only --diff-filter=A -- '*.py' | xargs black --check --verbose --config $BLACK_CONFIG_PATH
+            git diff origin/${GITHUB_BASE_REF}..origin/${GITHUB_HEAD_REF} -w --name-only --diff-filter=A -- '*.py' | xargs black --check --verbose --config $BLACK_CONFIG_PATH
           fi
           echo $?
       - name: exit if no problem format
@@ -37,9 +37,9 @@ jobs:
       - name: apply black
         run: |
           if [ "$BLACK_CONFIG_PATH" == "" ]; then
-            git diff origin/${GITHUB_BASE_REF}..origin/${GITHUB_HEAD_REF} --name-only --diff-filter=A -- '*.py' | xargs black -q
+            git diff origin/${GITHUB_BASE_REF}..origin/${GITHUB_HEAD_REF} -w --name-only --diff-filter=A -- '*.py' | xargs black -q
           else
-            git diff origin/${GITHUB_BASE_REF}..origin/${GITHUB_HEAD_REF} --name-only --diff-filter=A -- '*.py' | xargs black -q --config $BLACK_CONFIG_PATH
+            git diff origin/${GITHUB_BASE_REF}..origin/${GITHUB_HEAD_REF} -w --name-only --diff-filter=A -- '*.py' | xargs black -q --config $BLACK_CONFIG_PATH
           fi
         if: steps.check_format.outcome == 'failure'
       - name: commit fix format
