@@ -15,7 +15,6 @@ jobs:
       - name: install black
         run: pip install black
       - name: set black config dir
-        env:
         run: echo "BLACK_CONFIG_PATH=" >> $GITHUB_ENV
       - name: check illegal format
         id: check_format
