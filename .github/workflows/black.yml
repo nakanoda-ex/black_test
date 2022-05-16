@@ -15,7 +15,7 @@ jobs:
       - name: install black
         run: pip install black
       - name: set black config dir
-        run: echo "BLACK_CONFIG_PATH=" >> $GITHUB_ENV
+        run: echo "BLACK_CONFIG_PATH=./config/pyproject.toml" >> $GITHUB_ENV
       - name: check illegal format
         id: check_format
         continue-on-error: true
