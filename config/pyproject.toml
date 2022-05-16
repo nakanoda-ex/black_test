@@ -1,2 +1,2 @@
 [tool.black]
-skip-string-normalization = ture
+skip-string-normalization = true
