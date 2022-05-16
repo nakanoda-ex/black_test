@@ -27,7 +27,7 @@ jobs:
         id: check_format_with_config
         continue-on-error: true
         run: |
-          git diff origin/${GITHUB_BASE_REF}..origin/${GITHUB_HEAD_REF} --name-only --diff-filter=A -- '*.py' | xargs black --check --verbose --config $BLACK_CONFIG
+          git diff origin/${GITHUB_BASE_REF}..origin/${GITHUB_HEAD_REF} --name-only --diff-filter=A -- '*.py' | xargs black --check --verbose --config $BLACK_CONFIG_PATH
           echo $?
         if: env.BLACK_CONFIG_FORMAT != 'null'
       - name: exit if no problem format
@@ -44,7 +44,7 @@ jobs:
           (steps.check_format.outcome == 'failure' || steps.check_format_with_config.outcome == 'failure') && 
           env.BLACK_CONFIG_FORMAT == 'null'
       - name: apply black with config
-        run: git diff origin/${GITHUB_BASE_REF}..origin/${GITHUB_HEAD_REF} --name-only --diff-filter=A -- '*.py' | xargs black -q --config $BLACK_CONFIG
+        run: git diff origin/${GITHUB_BASE_REF}..origin/${GITHUB_HEAD_REF} --name-only --diff-filter=A -- '*.py' | xargs black -q --config $BLACK_CONFIG_PATH
         if: >-
           (steps.check_format.outcome == 'failure' || steps.check_format_with_config.outcome == 'failure') &&
            env.BLACK_CONFIG_FORMAT != 'null'
