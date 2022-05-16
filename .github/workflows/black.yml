@@ -46,7 +46,7 @@ jobs:
       - name: apply black with config
         run: git diff origin/${GITHUB_BASE_REF}..origin/${GITHUB_HEAD_REF} --name-only --diff-filter=A -- '*.py' | xargs black -q --config $BLACK_CONFIG_PATH
         if: >-
-          ${{ (steps.check_format.outcome == 'failure' || steps.check_format_with_config.outcome == 'failure') &&
+          (steps.check_format.outcome == 'failure' || steps.check_format_with_config.outcome == 'failure') &&
           $BLACK_CONFIG_FORMAT != ''
       - name: commit fix format
         uses: EndBug/add-and-commit@v9
