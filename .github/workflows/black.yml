@@ -14,22 +14,33 @@ jobs:
           python-version: 3.7
       - name: install black
         run: pip install black
+      - name: set black config dir
+        run: echo "BLACK_CONFIG_PATH=./config/pyproject.toml" >> $GITHUB_ENV
       - name: check illegal format
         id: check_format
         continue-on-error: true
         run: |
-          git diff origin/${GITHUB_BASE_REF}..origin/${GITHUB_HEAD_REF} --name-only --diff-filter=A -- '*.py' | xargs black --check --verbose --target-version py39 --skip-string-normalization
+          if [ "$BLACK_CONFIG_PATH" == "" ]; then
+            git diff origin/${GITHUB_BASE_REF}..origin/${GITHUB_HEAD_REF} --name-only --diff-filter=A -- '*.py' | xargs black --check --verbose
+          else
+            git diff origin/${GITHUB_BASE_REF}..origin/${GITHUB_HEAD_REF} --name-only --diff-filter=A -- '*.py' | xargs black --check --verbose --config $BLACK_CONFIG_PATH
+          fi
           echo $?
       - name: exit if no problem format
         run: exit 0
-        if: steps.check_format.outcome == 'success'
+        if: (steps.check_format.outcome == 'success' || steps.check_format_with_config.outcome == 'success')
       - name: set branch suffix
         env:
           TZ: 'Asia/Tokyo'
         run: echo "CURRENT_DATETIME=$(date +'%Y%m%d%H%M%S')" >> $GITHUB_ENV
         if: steps.check_format.outcome == 'failure'
       - name: apply black
-        run: git diff origin/${GITHUB_BASE_REF}..origin/${GITHUB_HEAD_REF} --name-only --diff-filter=A -- '*.py' | xargs black -q --target-version py39 --skip-string-normalization
+        run: |
+          if [ "$BLACK_CONFIG_PATH" == "" ]; then
+            git diff origin/${GITHUB_BASE_REF}..origin/${GITHUB_HEAD_REF} --name-only --diff-filter=A -- '*.py' | xargs black -q
+          else
+            git diff origin/${GITHUB_BASE_REF}..origin/${GITHUB_HEAD_REF} --name-only --diff-filter=A -- '*.py' | xargs black -q --config $BLACK_CONFIG_PATH
+          fi
         if: steps.check_format.outcome == 'failure'
       - name: commit fix format
         uses: EndBug/add-and-commit@v9
