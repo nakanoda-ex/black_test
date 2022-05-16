@@ -14,23 +14,40 @@ jobs:
           python-version: 3.7
       - name: install black
         run: pip install black
+      - name: set black config dir
+        run: echo "BLACK_CONFIG_PATH=./config/pyproject.toml" >> $GITHUB_ENV
       - name: check illegal format
         id: check_format
         continue-on-error: true
         run: |
-          git diff origin/${GITHUB_BASE_REF}..origin/${GITHUB_HEAD_REF} --name-only --diff-filter=A -- '*.py' | xargs black --check --verbose --target-version py39 --skip-string-normalization
+          git diff origin/${GITHUB_BASE_REF}..origin/${GITHUB_HEAD_REF} --name-only --diff-filter=A -- '*.py' | xargs black --check --verbose
           echo $?
+        if: env.BLACK_CONFIG_FORMAT == ''
+      - name: check illegal format with config
+        id: check_format_with_config
+        continue-on-error: true
+        run: |
+          git diff origin/${GITHUB_BASE_REF}..origin/${GITHUB_HEAD_REF} --name-only --diff-filter=A -- '*.py' | xargs black --check --verbose --config $BLACK_CONFIG_PATH
+          echo $?
+        if: ${{ env.BLACK_CONFIG_FORMAT != '' }}
       - name: exit if no problem format
         run: exit 0
-        if: steps.check_format.outcome == 'success'
+        if: (steps.check_format.outcome == 'success' || steps.check_format_with_config.outcome == 'success')
       - name: set branch suffix
         env:
           TZ: 'Asia/Tokyo'
         run: echo "CURRENT_DATETIME=$(date +'%Y%m%d%H%M%S')" >> $GITHUB_ENV
-        if: steps.check_format.outcome == 'failure'
+        if: (steps.check_format.outcome == 'failure' || steps.check_format_with_config.outcome == 'failure')
       - name: apply black
-        run: git diff origin/${GITHUB_BASE_REF}..origin/${GITHUB_HEAD_REF} --name-only --diff-filter=A -- '*.py' | xargs black -q --target-version py39 --skip-string-normalization
-        if: steps.check_format.outcome == 'failure'
+        run: git diff origin/${GITHUB_BASE_REF}..origin/${GITHUB_HEAD_REF} --name-only --diff-filter=A -- '*.py' | xargs black -q
+        if: >-
+          (steps.check_format.outcome == 'failure' || steps.check_format_with_config.outcome == 'failure') && 
+          env.BLACK_CONFIG_FORMAT == ''
+      - name: apply black with config
+        run: git diff origin/${GITHUB_BASE_REF}..origin/${GITHUB_HEAD_REF} --name-only --diff-filter=A -- '*.py' | xargs black -q --config $BLACK_CONFIG_PATH
+        if: >-
+          ${{ (steps.check_format.outcome == 'failure' || steps.check_format_with_config.outcome == 'failure') &&
+          env.BLACK_CONFIG_FORMAT != '' }}
       - name: commit fix format
         uses: EndBug/add-and-commit@v9
         with:
@@ -38,7 +55,7 @@ jobs:
           message: fix format
           push: true
           add: .
-        if: steps.check_format.outcome == 'failure'
+        if: (steps.check_format.outcome == 'failure' || steps.check_format_with_config.outcome == 'failure') 
       - name: create pull request
         uses: repo-sync/pull-request@v2
         with:
@@ -46,4 +63,4 @@ jobs:
           destination_branch: ${{github.head_ref}}
           pr_title: fix format ${{ env.PR_TITLE }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
-        if: steps.check_format.outcome == 'failure'
+        if: (steps.check_format.outcome == 'failure' || steps.check_format_with_config.outcome == 'failure') 
