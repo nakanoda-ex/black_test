@@ -28,7 +28,7 @@ jobs:
           echo $?
       - name: exit if no problem format
         run: exit 0
-        if: (steps.check_format.outcome == 'success' || steps.check_format_with_config.outcome == 'success')
+        if: steps.check_format.outcome == 'success'
       - name: set branch suffix
         env:
           TZ: 'Asia/Tokyo'
