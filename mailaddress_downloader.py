@@ -74,7 +74,7 @@ def load_execute_data(execute_info_path):
             data = json.load(f)
     except :
         raise ReadFileError(
-            f"実行情報のファイルの読み込みに失敗しました。各ファイルのパスが正しいか確認してください。 \n・実行情報ファイルパス:{execute_info_path}"
+            f"実行情報のファイルの読み込みに失敗しました。各ファイルのパスが正しいか確認してください。 \n・実行情報ファイルパス:{execute_info_path}",
             400
         )
 
